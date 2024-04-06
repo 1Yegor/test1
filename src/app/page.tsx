@@ -1,95 +1,84 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import React, { useEffect, useState } from "react";
+import style from "./page.module.scss";
+import { Pagination } from "./components/pagination/pagination";
+import Content from "./components/content/content";
+import DefaultBtn from "./components/defaultButton/button";
+import loader from "../../public/next.svg";
+const clientID = "Ip0XA55zY7b7-d19osq1L5btGg-YCeDZVpnnJjXqHxs";
+const API_URL = "https://api.unsplash.com";
 
-export default function Home() {
+export interface ImageItem {
+  alt_description: string;
+  slug: string;
+  id: string;
+  urls: {
+    small: string;
+    regular: string;
+    full: string;
+  };
+}
+
+export default function Main() {
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [inputValue, setInputValue] = useState("1");
+
+  const fetchImages = async (page: number) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(
+        `${API_URL}/search/photos?client_id=${clientID}&query=sun&page=${page}&per_page=30`
+      );
+      const data = await response.json();
+      setImages(data.results);
+      setTotalPages(data.total_pages);
+    } catch (error) {
+      console.error("Error fetching images:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchImages(currentPage);
+  }, [currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleScrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <div className={style.main}>
+      <Pagination
+        currentPage={currentPage}
+        setInputValue={setInputValue}
+        totalPages={totalPages}
+        setCurrentPage={handlePageChange}
+        inputValue={inputValue}
+        handleScrollToTop={handleScrollToTop}
+      />
+      {isLoading ? (
+        <div className={style.loader}> {"=)"} </div>
+      ) : (
+        <Content images={images} />
+      )}
+      <DefaultBtn
+        txt={"Наверх"}
+        width={"normal"}
+        bg={"red"}
+        border={"violet"}
+        onClick={handleScrollToTop}
+      />
+    </div>
   );
 }
